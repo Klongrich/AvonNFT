@@ -5,6 +5,8 @@ Quickly put together NFT exchange
 
 The main smart contract on the back end is written and tested, it has 3 main functions to create orders then one function to call to take the order.
 
+# Rinkeby Exchange Contract Address: 0x58648d95A6884c81AD3541cfb255af810Cb09031
+
 ## Creating Order Functions
 
 ### 1.) createNftToNft() -> allows the creation of a NFT to NFT transfers
