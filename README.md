@@ -14,7 +14,7 @@ The main smart contract on the back end is written and tested, it has 3 main fun
 ### 3.) createNftToEth() -> Allows the creation of NFT to ETH transfers
 
 Each of these functions can be called to create an offer and list a NFT. The details of the offer are then stored withing the smart contract on chain
-for the lister to see. Once the lister decieds he aggess with the offer, only then the fucntion is called in order to excute the exchange.
+for the lister to see. Once the lister agrees with the offer, only then the fucntion is called in order to excute the exchange.
 
 ## Filing Order Function
 
