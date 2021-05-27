@@ -122,6 +122,10 @@ contract NftExchange is INftExchange {
         delete OrderInfo[Buyer][OrderID];
     }
 
+    function _createOrderId(address _buyer, address _seller, bytes32 salt) internal view returns (bytes32) {
+        return keccak256(abi.encode(_buyer, _seller, salt, block.timestamp));
+    }
+
     function _transferListerNft(address _buyer, uint256 _orderID) internal {
         require(
             IERC721(OrderInfo[_buyer][_orderID].ListerTokenAddress).ownerOf(
