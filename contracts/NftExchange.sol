@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
-
+import "./Utils/operations.sol";
 import "./Interface/INftExchange.sol";
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 
 // For OrderDetials.Type
 
@@ -20,7 +21,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // 8 = Nft -> Multi *
 
-contract NftExchange is INftExchange {
+contract NftExchange is INftExchange, Operations {
     
     event newOrder(
         address ListserTokenAddress,
@@ -60,7 +61,7 @@ contract NftExchange is INftExchange {
             "not owner, cannot create order"
         );
 
-        bytes32 OrderID = _createOrderId(Lister, ListerContract, ListerID, keccak256(_toBytes(block.timestamp)));
+        bytes32 OrderID = _createOrderId(Lister, ListerContract, ListerID);
 
         OrderInfo[msg.sender][OrderID].ListerTokenAddress = ListerContract;
         OrderInfo[msg.sender][OrderID].ListerTokenId = ListerID;
@@ -93,7 +94,7 @@ contract NftExchange is INftExchange {
             "sender does not have enought coins"
         );
 
-        bytes32 OrderID = _createOrderId(Lister, ListerContract, ListerID, keccak256(_toBytes(block.timestamp)));
+        bytes32 OrderID = _createOrderId(Lister, ListerContract, ListerID);
 
         OrderInfo[msg.sender][OrderID].ListerTokenAddress = ListerContract;
         OrderInfo[msg.sender][OrderID].ListerTokenId = ListerID;
@@ -109,7 +110,7 @@ contract NftExchange is INftExchange {
         address ListerContract,
         uint256 ListerID
     ) public override payable returns (bytes32 orderID) {
-        bytes32 OrderID = _createOrderId(Lister, ListerContract, ListerID, keccak256(_toBytes(block.timestamp)));
+        bytes32 OrderID = _createOrderId(Lister, ListerContract, ListerID);
 
         OrderInfo[msg.sender][OrderID].ListerTokenAddress = ListerContract;
         OrderInfo[msg.sender][OrderID].ListerTokenId = ListerID;
@@ -134,15 +135,6 @@ contract NftExchange is INftExchange {
 
         delete OrderInfo[Buyer][OrderID];
         return(true);
-    }
-
-    function _createOrderId(address _listerPublicKey, address _listerContractPublicKey, uint256 _listerId, bytes32 salt) internal pure returns (bytes32) {
-        return keccak256(abi.encode(_listerPublicKey, _listerContractPublicKey, _listerId, salt));
-    }
-
-    function _toBytes(uint256 x) internal pure returns (bytes memory b) {
-        b = new bytes(32);
-        assembly { mstore(add(b, 32), x) }
     }
 
     function _transferListerNft(address _buyer, bytes32 _orderID) internal {
