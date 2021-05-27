@@ -31,4 +31,4 @@ This essentialy encodes 3 paramters that are the NFT listers public key, The NFT
 For paramters plz reference the INftExchange.sol (Interface) in "./contracts/Interface/INftExchange.sol" for what paramters are passed to each 
 of the smart contract functions.
 
-## Rinkeby Exchange Contract: 0x58648d95A6884c81AD3541cfb255af810Cb09031
+## Rinkeby Exchange Contract: 0xA7F5A22a484CD4747adeD45b49BcA0DCAcB8806D
