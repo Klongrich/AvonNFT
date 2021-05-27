@@ -2,5 +2,8 @@
 /front-end/node_modules
 /front-end/build
 
+/build
+build
+
 package-lock.json
 

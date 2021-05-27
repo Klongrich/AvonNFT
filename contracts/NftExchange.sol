@@ -48,7 +48,7 @@ contract NftExchange is INftExchange {
         uint256 BuyerID,
         address ListerContract,
         uint256 ListerID
-    ) public override returns (bool) {
+    ) public override returns (bytes32 orderID) {
         require(
             IERC721(BuyerContract).getApproved(BuyerID) == address(this),
             "not approved, cannot create order"
@@ -74,6 +74,8 @@ contract NftExchange is INftExchange {
             BuyerID,
             OrderID
         );
+
+        return(OrderID);
     }
 
     function makeNftToERC20(
@@ -81,7 +83,7 @@ contract NftExchange is INftExchange {
         uint256 ListerID,
         address Erc20Contract,
         uint256 Amount
-    ) public override payable returns (bool) {
+    ) public override payable returns (bytes32 orderID) {
         //Add Check to make sure Erc20Contract address passes is Valid
         require(
             IERC20(Erc20Contract).balanceOf(msg.sender) >= Amount,
@@ -95,18 +97,22 @@ contract NftExchange is INftExchange {
         OrderInfo[msg.sender][OrderID].ERC20Address = Erc20Contract;
         OrderInfo[msg.sender][OrderID].ERC20Amount = Amount;
         OrderInfo[msg.sender][OrderID].Type = 2;
+
+        return (OrderID);
     }
 
     function makeNftToETH(
         address ListerContract,
         uint256 ListerID
-    ) public override payable returns (bool) {
+    ) public override payable returns (bytes32 orderID) {
         bytes32 OrderID = _createOrderId(ListerContract, ListerID, keccak256(_toBytes(block.timestamp)));
 
         OrderInfo[msg.sender][OrderID].ListerTokenAddress = ListerContract;
         OrderInfo[msg.sender][OrderID].ListerTokenId = ListerID;
         OrderInfo[msg.sender][OrderID].EthAmount = msg.value;
         OrderInfo[msg.sender][OrderID].Type = 3;
+
+        return(OrderID);
     }
 
     function takeOrder(address Buyer, address payable Reciver, bytes32 OrderID)
@@ -123,13 +129,14 @@ contract NftExchange is INftExchange {
         }
 
         delete OrderInfo[Buyer][OrderID];
+        return(true);
     }
 
-    function _createOrderId(address _listerContract, uint256 _listerId, bytes32 salt) internal view returns (bytes32) {
+    function _createOrderId(address _listerContract, uint256 _listerId, bytes32 salt) internal pure returns (bytes32) {
         return keccak256(abi.encode(_listerContract, _listerId, salt));
     }
 
-    function _toBytes(uint256 x) public returns (bytes memory b) {
+    function _toBytes(uint256 x) internal pure returns (bytes memory b) {
         b = new bytes(32);
         assembly { mstore(add(b, 32), x) }
     }
