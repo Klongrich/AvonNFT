@@ -15,6 +15,10 @@ let taker
 let lister
 let kyleCoin;
 
+let nftOrderID;
+let ercOrderID;
+let ethOrderID;
+
 const makerID = 1
 const takerID = 2
 
@@ -53,15 +57,17 @@ describe('Test Swap', () => {
         expect(await nftOne.getApproved(makerID)).to.be.equal(nftSwap.address)
     })
 
-    it('Makes NFT to NFT', async () => {
+    it('Makes NFT to NFT', async () => {  
         await nftSwap.makeNftToNft(
+            maker,
             nftOne.address,
             makerID,
             nftTwo.address,
             takerID,
-            71444,
             { from: maker }
-        )
+        ).then(function (res) {
+            nftOrderID = res.logs[0].args.OrderID;
+        });
     })
 
     it('Taker approves swap contract', async () => {
@@ -76,16 +82,16 @@ describe('Test Swap', () => {
 
         let res2;
 
-        res2 = await nftSwap.takeOrder(maker, taker, 71444, { from: taker })
+        res2 = await nftSwap.takeOrder(maker, taker, nftOrderID, { from: taker })
 
-        // console.log(res2);
+        /// console.log(res2);
         expect(await nftOne.ownerOf(makerID)).to.be.equal(taker)
         expect(await nftTwo.ownerOf(takerID)).to.be.equal(maker)
     })
 
     it('Approves ERC20 Transfer Amount', async () => {
         await kyleCoin.approve(nftSwap.address, 1000);
-
+        
         //Could check 'allowance' to equal '1000'
     })
 
@@ -97,35 +103,44 @@ describe('Test Swap', () => {
 
     it('Makes NFT to ERC20', async () => {
         await nftSwap.makeNftToERC20(
+            TokenHolder,
             nftOne.address,
             makerID,
             kyleCoin.address,
             714,
-            100074000714,
             { from: TokenHolder }
-        )
+        ).then(function (res) {
+            console.log(res);
+            ercOrderID = res.logs[0].args.OrderID;
+        })
     })
 
     it('Takes NFT to ERC20', async () => {
-        await nftSwap.takeOrder(TokenHolder, taker, 100074000714, { from: taker });
-
+        await nftSwap.takeOrder(TokenHolder, taker, ercOrderID, { from: taker });
         //Check ERC20 Balance of Taker
     })
 
-    it('Makes NFT to ETH', async () => {
-        await nftSwap.makeNftToETH(nftOne.address, makerID, 1234, { from: lister, value: 417 })
-    })
+    // it('Makes NFT to ETH', async () => {
+    //     await nftSwap.makeNftToETH(lister, 
+    //         nftOne.address, 
+    //         makerID, 
+    //         { from: lister, value: 417 }
+    //     ).then(function (res) {
+    //         console.log(res.logs[0].args.OrderID);
+    //         ethOrderID =  res.logs[0].args.OrderID;
+    //     })
+    // })
 
-    it('Approves NFT to Be Swapped', async () => {
-        await nftOne.approve(nftSwap.address, makerID, { from: TokenHolder })
+    // it('Approves NFT to Be Swapped', async () => {
+    //     await nftOne.approve(nftSwap.address, makerID, { from: TokenHolder })
 
-        expect(await nftOne.getApproved(makerID)).to.be.equal(nftSwap.address)
-    })
+    //     expect(await nftOne.getApproved(makerID)).to.be.equal(nftSwap.address)
+    // })
 
-    it('Takes NFT to ETH', async () => {
-        await nftSwap.takeOrder(lister, TokenHolder, 1234, { from: TokenHolder })
+    // it('Takes NFT to ETH', async () => {
+    //     await nftSwap.takeOrder(lister, TokenHolder, ethOrderID, { from: TokenHolder })
 
-        //Check the amount of ETH the TokenHolder and lister has
-    })
+    //     //Check the amount of ETH the TokenHolder and lister has
+    // })
 
 })

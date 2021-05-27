@@ -21,6 +21,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // 8 = Nft -> Multi *
 
 contract NftExchange is INftExchange {
+    
     event newOrder(
         address ListserTokenAddress,
         uint256 ListerTokenId,
@@ -44,6 +45,7 @@ contract NftExchange is INftExchange {
     mapping(address => mapping(bytes32 => OrderDetials)) public OrderInfo;
 
     function makeNftToNft(
+        address Lister,
         address BuyerContract,
         uint256 BuyerID,
         address ListerContract,
@@ -58,7 +60,7 @@ contract NftExchange is INftExchange {
             "not owner, cannot create order"
         );
 
-        bytes32 OrderID = _createOrderId(ListerContract, ListerID, keccak256(_toBytes(block.timestamp)));
+        bytes32 OrderID = _createOrderId(Lister, ListerContract, ListerID, keccak256(_toBytes(block.timestamp)));
 
         OrderInfo[msg.sender][OrderID].ListerTokenAddress = ListerContract;
         OrderInfo[msg.sender][OrderID].ListerTokenId = ListerID;
@@ -79,6 +81,7 @@ contract NftExchange is INftExchange {
     }
 
     function makeNftToERC20(
+        address Lister,
         address ListerContract,
         uint256 ListerID,
         address Erc20Contract,
@@ -90,7 +93,7 @@ contract NftExchange is INftExchange {
             "sender does not have enought coins"
         );
 
-        bytes32 OrderID = _createOrderId(ListerContract, ListerID, keccak256(_toBytes(block.timestamp)));
+        bytes32 OrderID = _createOrderId(Lister, ListerContract, ListerID, keccak256(_toBytes(block.timestamp)));
 
         OrderInfo[msg.sender][OrderID].ListerTokenAddress = ListerContract;
         OrderInfo[msg.sender][OrderID].ListerTokenId = ListerID;
@@ -102,10 +105,11 @@ contract NftExchange is INftExchange {
     }
 
     function makeNftToETH(
+        address Lister,
         address ListerContract,
         uint256 ListerID
     ) public override payable returns (bytes32 orderID) {
-        bytes32 OrderID = _createOrderId(ListerContract, ListerID, keccak256(_toBytes(block.timestamp)));
+        bytes32 OrderID = _createOrderId(Lister, ListerContract, ListerID, keccak256(_toBytes(block.timestamp)));
 
         OrderInfo[msg.sender][OrderID].ListerTokenAddress = ListerContract;
         OrderInfo[msg.sender][OrderID].ListerTokenId = ListerID;
@@ -132,8 +136,8 @@ contract NftExchange is INftExchange {
         return(true);
     }
 
-    function _createOrderId(address _listerContract, uint256 _listerId, bytes32 salt) internal pure returns (bytes32) {
-        return keccak256(abi.encode(_listerContract, _listerId, salt));
+    function _createOrderId(address _listerPublicKey, address _listerContractPublicKey, uint256 _listerId, bytes32 salt) internal pure returns (bytes32) {
+        return keccak256(abi.encode(_listerPublicKey, _listerContractPublicKey, _listerId, salt));
     }
 
     function _toBytes(uint256 x) internal pure returns (bytes memory b) {
