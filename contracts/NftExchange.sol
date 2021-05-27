@@ -27,7 +27,7 @@ contract NftExchange is INftExchange {
         address BuyerAddress,
         address BuyerTokenAddress,
         uint256 BuyerTokenId,
-        uint256 OrderID
+        bytes32 OrderID
     );
 
     struct OrderDetials {
@@ -41,14 +41,13 @@ contract NftExchange is INftExchange {
         uint256 Type;
     }
 
-    mapping(address => mapping(uint256 => OrderDetials)) public OrderInfo;
+    mapping(address => mapping(bytes32 => OrderDetials)) public OrderInfo;
 
     function makeNftToNft(
         address BuyerContract,
         uint256 BuyerID,
         address ListerContract,
-        uint256 ListerID,
-        uint256 OrderID
+        uint256 ListerID
     ) public override returns (bool) {
         require(
             IERC721(BuyerContract).getApproved(BuyerID) == address(this),
@@ -58,6 +57,8 @@ contract NftExchange is INftExchange {
             IERC721(BuyerContract).ownerOf(BuyerID) == msg.sender,
             "not owner, cannot create order"
         );
+
+        bytes32 OrderID = _createOrderId(ListerContract, ListerID, keccak256(_toBytes(block.timestamp)));
 
         OrderInfo[msg.sender][OrderID].ListerTokenAddress = ListerContract;
         OrderInfo[msg.sender][OrderID].ListerTokenId = ListerID;
@@ -79,14 +80,15 @@ contract NftExchange is INftExchange {
         address ListerContract,
         uint256 ListerID,
         address Erc20Contract,
-        uint256 Amount,
-        uint256 OrderID
+        uint256 Amount
     ) public override payable returns (bool) {
         //Add Check to make sure Erc20Contract address passes is Valid
         require(
             IERC20(Erc20Contract).balanceOf(msg.sender) >= Amount,
             "sender does not have enought coins"
         );
+
+        bytes32 OrderID = _createOrderId(ListerContract, ListerID, keccak256(_toBytes(block.timestamp)));
 
         OrderInfo[msg.sender][OrderID].ListerTokenAddress = ListerContract;
         OrderInfo[msg.sender][OrderID].ListerTokenId = ListerID;
@@ -97,16 +99,17 @@ contract NftExchange is INftExchange {
 
     function makeNftToETH(
         address ListerContract,
-        uint256 ListerID,
-        uint256 OrderID
+        uint256 ListerID
     ) public override payable returns (bool) {
+        bytes32 OrderID = _createOrderId(ListerContract, ListerID, keccak256(_toBytes(block.timestamp)));
+
         OrderInfo[msg.sender][OrderID].ListerTokenAddress = ListerContract;
         OrderInfo[msg.sender][OrderID].ListerTokenId = ListerID;
         OrderInfo[msg.sender][OrderID].EthAmount = msg.value;
         OrderInfo[msg.sender][OrderID].Type = 3;
     }
 
-    function takeOrder(address Buyer, address payable Reciver, uint256 OrderID)
+    function takeOrder(address Buyer, address payable Reciver, bytes32 OrderID)
         public
         override
         returns (bool)
@@ -122,11 +125,16 @@ contract NftExchange is INftExchange {
         delete OrderInfo[Buyer][OrderID];
     }
 
-    function _createOrderId(address _buyer, address _seller, bytes32 salt) internal view returns (bytes32) {
-        return keccak256(abi.encode(_buyer, _seller, salt, block.timestamp));
+    function _createOrderId(address _listerContract, uint256 _listerId, bytes32 salt) internal view returns (bytes32) {
+        return keccak256(abi.encode(_listerContract, _listerId, salt));
     }
 
-    function _transferListerNft(address _buyer, uint256 _orderID) internal {
+    function _toBytes(uint256 x) public returns (bytes memory b) {
+        b = new bytes(32);
+        assembly { mstore(add(b, 32), x) }
+    }
+
+    function _transferListerNft(address _buyer, bytes32 _orderID) internal {
         require(
             IERC721(OrderInfo[_buyer][_orderID].ListerTokenAddress).ownerOf(
                 OrderInfo[_buyer][_orderID].ListerTokenId
@@ -141,14 +149,14 @@ contract NftExchange is INftExchange {
         );
     }
 
-    function _takeNftToEth(address _buyer, address payable _reciver, uint256 _orderID) internal {
+    function _takeNftToEth(address _buyer, address payable _reciver, bytes32 _orderID) internal {
         require(msg.sender == _reciver);
         _transferListerNft(_buyer, _orderID);
 
         _reciver.transfer(OrderInfo[_buyer][_orderID].EthAmount);
     }
 
-    function _takeNftToNft(address _buyer, uint256 _orderID) internal {
+    function _takeNftToNft(address _buyer, bytes32 _orderID) internal {
         _transferListerNft(_buyer, _orderID);
 
         IERC721(OrderInfo[_buyer][_orderID].BuyerTokenAddress).transferFrom(
@@ -158,7 +166,7 @@ contract NftExchange is INftExchange {
         );
     }
 
-    function _takeNftToErc20(address _buyer, uint256 _orderID) internal {
+    function _takeNftToErc20(address _buyer, bytes32 _orderID) internal {
         _transferListerNft(_buyer, _orderID);
 
         IERC20(OrderInfo[_buyer][_orderID].ERC20Address).transferFrom(
