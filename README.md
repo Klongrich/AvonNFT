@@ -1,9 +1,4 @@
 # nft_exchnage
-Quickly put together NFT exchange
-
-## Simple NFT Exchange
-
-The main smart contract on the back end is written and tested, it has 3 main functions to create orders then one function to call to take the order.
 
 ## Creating Order Functions
 
